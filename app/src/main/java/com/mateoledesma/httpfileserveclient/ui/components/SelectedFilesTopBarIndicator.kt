@@ -29,8 +29,7 @@ fun SelectedFilesTopBarIndicator(
         }
         Text(
             modifier = Modifier
-                .padding(start = 6.dp)
-                .paddingFromBaseline(bottom = 9.dp),
+                .padding(start = 6.dp),
             text = count.toString(),
             fontSize = 20.sp
         )

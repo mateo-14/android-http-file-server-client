@@ -32,8 +32,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 
-// TODO Add onAddToFavorite and onRemoveFromFavorite
-
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

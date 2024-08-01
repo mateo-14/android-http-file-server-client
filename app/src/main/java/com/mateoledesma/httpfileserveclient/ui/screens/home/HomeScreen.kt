@@ -43,13 +43,15 @@ fun HomeScreen(
     onClickFile: (FileEntry) -> Unit,
     onRandomFile: (FileEntry) -> Unit,
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val filesState by viewModel.filesState.collectAsState()
     val pullToRefreshState = rememberPullToRefreshState()
     val isLinearLayout by viewModel.isLinearLayout.collectAsState()
     val coroutineScope = rememberCoroutineScope()
-    val selectedFiles = state.files.filter { it.isSelected }
+    val filteredFiles by viewModel.filteredFiles.collectAsState()
+    val selectedFiles = filteredFiles.filter { it.isSelected }
     val scrollBehavior =
-        if (state.files.isNotEmpty()) TopAppBarDefaults.enterAlwaysScrollBehavior() else TopAppBarDefaults.pinnedScrollBehavior()
+        if (filesState.files.isNotEmpty()) TopAppBarDefaults.enterAlwaysScrollBehavior() else TopAppBarDefaults.pinnedScrollBehavior()
+
 
     LaunchedEffect(key1 = true) {
         val success = viewModel.getFiles(path)
@@ -87,7 +89,8 @@ fun HomeScreen(
         .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             HomeTopBar(
-                navController = navController, scrollBehavior = scrollBehavior,
+                navController = navController,
+                scrollBehavior = scrollBehavior,
                 isLinearLayout = isLinearLayout,
                 path = path,
                 selectedFiles = selectedFiles,
@@ -110,8 +113,8 @@ fun HomeScreen(
                 },
                 onRandomFile = {
                     coroutineScope.launch {
-                        if (state.files.isNotEmpty()) {
-                            onRandomFile(state.files.random())
+                        if (filteredFiles.isNotEmpty()) {
+                            onRandomFile(filteredFiles.random())
                         } else {
                             Toast.makeText(
                                 navController.context,
@@ -121,6 +124,10 @@ fun HomeScreen(
                         }
                     }
                 },
+                onSearchValueChange = { searchValue ->
+                    viewModel.searchFiles(searchValue)
+                },
+                searchValue = viewModel.searchValue.collectAsState().value
             )
         }) { innerPadding ->
         Box(
@@ -129,7 +136,7 @@ fun HomeScreen(
                 .fillMaxSize()
                 .nestedScroll(pullToRefreshState.nestedScrollConnection)
         ) {
-            if (state.isLoading) {
+            if (filesState.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
             } else {
                 if (isLinearLayout) {
@@ -139,7 +146,7 @@ fun HomeScreen(
                             .padding(
                                 horizontal = 12.dp
                             ),
-                        files = state.files,
+                        files = filteredFiles,
                         onSelect = ::onSelectFile,
                         onAddToFavorite = ::onAddFileToFavorites,
                         onRemoveFromFavorite = ::onRemoveFileFromFavorites,
@@ -152,7 +159,7 @@ fun HomeScreen(
                             .padding(
                                 horizontal = 12.dp
                             ),
-                        files = state.files,
+                        files = filteredFiles,
                         onSelect = ::onSelectFile,
                         onAddToFavorite = ::onAddFileToFavorites,
                         onRemoveFromFavorite = ::onRemoveFileFromFavorites,
@@ -161,13 +168,13 @@ fun HomeScreen(
                 }
             }
 
-            LaunchedEffect(state.isLoading) {
-                if (!state.isLoading) {
+            LaunchedEffect(filesState.isLoading) {
+                if (!filesState.isLoading) {
                     pullToRefreshState.endRefresh()
                 }
             }
 
-            if (!state.hasError) {
+            if (!filesState.hasError) {
                 PullToRefresh(modifier = Modifier.align(Alignment.TopCenter),
                     pullToRefreshState = pullToRefreshState,
                     onRefresh = {

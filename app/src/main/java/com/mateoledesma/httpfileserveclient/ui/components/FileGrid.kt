@@ -10,7 +10,6 @@ import androidx.compose.ui.unit.dp
 import com.mateoledesma.httpfileserveclient.data.model.FileEntry
 import com.mateoledesma.httpfileserveclient.utils.getThumbnailUrl
 
-// TODO Add onAddToFavorite and onRemoveFromFavorite
 @Composable
 fun FileGrid(
     modifier: Modifier = Modifier,

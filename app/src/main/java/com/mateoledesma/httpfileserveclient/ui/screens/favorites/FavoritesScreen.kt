@@ -35,9 +35,9 @@ fun FavoritesScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val viewModel = hiltViewModel<FavoritesViewModel>()
     val isLinearLayout by viewModel.isLinearLayout.collectAsState()
-    val files by viewModel.files.collectAsState()
     val coroutineScope = rememberCoroutineScope()
-    val selectedFiles = files.filter { it.isSelected }
+    val filteredFiles by viewModel.filteredFiles.collectAsState()
+    val selectedFiles = filteredFiles.filter { it.isSelected }
 
     fun handleSelect(file: FileEntry) {
         if (file.isSelected) {
@@ -60,7 +60,7 @@ fun FavoritesScreen(
             FavoritesTopBar(
                 scrollBehavior = scrollBehavior,
                 isLinearLayout = isLinearLayout,
-                onLayoutChange = { isLinearLayout ->
+                onChangeLayout = { isLinearLayout ->
                     viewModel.saveLayoutPreference(isLinearLayout)
                 },
                 selectedFiles = selectedFiles,
@@ -75,8 +75,8 @@ fun FavoritesScreen(
                 },
                 onRandomFile = {
                     coroutineScope.launch {
-                        if (files.isNotEmpty()) {
-                            onRandomFile(files.random())
+                        if (filteredFiles.isNotEmpty()) {
+                            onRandomFile(filteredFiles.random())
                         } else {
                             Toast.makeText(
                                 navController.context,
@@ -86,6 +86,10 @@ fun FavoritesScreen(
                         }
                     }
                 },
+                onSearchValueChange = { searchValue ->
+                    viewModel.searchFiles(searchValue)
+                },
+                searchValue = viewModel.searchValue.collectAsState().value,
             )
         }) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
@@ -96,7 +100,7 @@ fun FavoritesScreen(
                         .padding(
                             horizontal = 12.dp
                         ),
-                    files = files,
+                    files = filteredFiles,
                     onSelect = { file ->
                         handleSelect(file)
                     },
@@ -115,7 +119,7 @@ fun FavoritesScreen(
                         .padding(
                             horizontal = 12.dp
                         ),
-                    files = files,
+                    files = filteredFiles,
                     onSelect = { file ->
                         handleSelect(file)
                     },

@@ -1,5 +1,6 @@
 package com.mateoledesma.httpfileserveclient.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mateoledesma.httpfileserveclient.data.FavoritesFilesRepository
@@ -7,15 +8,20 @@ import com.mateoledesma.httpfileserveclient.data.FileServerRepository
 import com.mateoledesma.httpfileserveclient.data.UserPreferencesRepository
 import com.mateoledesma.httpfileserveclient.data.model.FileEntry
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class UiState(
+data class RequestState(
     val isLoading: Boolean = true,
     val files: List<FileEntry> = emptyList(),
     val hasError: Boolean = false,
@@ -29,20 +35,38 @@ class HomeViewModel @Inject constructor(
 ) :
     ViewModel() {
 
-    private val _uiState = MutableStateFlow(UiState())
-    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+    private val _filesState = MutableStateFlow(RequestState())
+    val filesState: StateFlow<RequestState> = _filesState.asStateFlow()
+
     val isLinearLayout: StateFlow<Boolean> = userPreferencesRepository.isLinearLayout.stateIn(
         viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
         initialValue = true
     )
 
+    private val _searchValue = MutableStateFlow("")
+    val searchValue: StateFlow<String> = _searchValue.asStateFlow()
+
+    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
+    val filteredFiles: StateFlow<List<FileEntry>> = _searchValue.debounce(300).flatMapLatest { searchValue ->
+        _filesState.map { filesState ->
+            filesState.files.filter { file ->
+                file.name.contains(searchValue, ignoreCase = true)
+            }
+        }
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        emptyList()
+    )
+
+
     suspend fun getFiles(path: String): Boolean {
         try {
-            _uiState.value = UiState(isLoading = true)
+            _filesState.value = RequestState(isLoading = true)
             val files = fileServerRepository.getFiles(path)
             val favoriteFiles = favoritesFilesRepository.getFilesByIds(files.map { it.id })
-            _uiState.value = _uiState.value.copy(
+            _filesState.value = _filesState.value.copy(
                 files = files.map { file ->
                     file.copy(isFavorite = favoriteFiles.contains(file.id))
                 },
@@ -50,7 +74,7 @@ class HomeViewModel @Inject constructor(
             )
             return true
         } catch (e: Exception) {
-            _uiState.value = UiState(isLoading = false, hasError = true)
+            _filesState.value = RequestState(isLoading = false, hasError = true)
             return false
         }
     }
@@ -62,8 +86,8 @@ class HomeViewModel @Inject constructor(
     }
 
     fun selectFile(file: FileEntry) {
-        _uiState.value = _uiState.value.copy(
-            files = _uiState.value.files.map {
+        _filesState.value = _filesState.value.copy(
+            files = _filesState.value.files.map {
                 if (it == file) {
                     it.copy(isSelected = true)
                 } else {
@@ -74,8 +98,8 @@ class HomeViewModel @Inject constructor(
     }
 
     fun unselectFile(file: FileEntry) {
-        _uiState.value = _uiState.value.copy(
-            files = _uiState.value.files.map {
+        _filesState.value = _filesState.value.copy(
+            files = _filesState.value.files.map {
                 if (it == file) {
                     it.copy(isSelected = false)
                 } else {
@@ -86,8 +110,8 @@ class HomeViewModel @Inject constructor(
     }
 
     fun clearSelectedFiles() {
-        _uiState.value = _uiState.value.copy(
-            files = _uiState.value.files.map {
+        _filesState.value = _filesState.value.copy(
+            files = _filesState.value.files.map {
                 it.copy(isSelected = false)
             }
         )
@@ -95,8 +119,8 @@ class HomeViewModel @Inject constructor(
 
     suspend fun addFileToFavorites(file: FileEntry) {
         favoritesFilesRepository.addFile(file)
-        _uiState.value = _uiState.value.copy(
-            files = _uiState.value.files.map {
+        _filesState.value = _filesState.value.copy(
+            files = _filesState.value.files.map {
                 if (it == file) {
                     it.copy(isFavorite = true)
                 } else {
@@ -108,8 +132,8 @@ class HomeViewModel @Inject constructor(
 
     suspend fun removeFileFromFavorites(file: FileEntry) {
         favoritesFilesRepository.deleteFile(file)
-        _uiState.value = _uiState.value.copy(
-            files = _uiState.value.files.map {
+        _filesState.value = _filesState.value.copy(
+            files = _filesState.value.files.map {
                 if (it == file) {
                     it.copy(isFavorite = false)
                 } else {
@@ -120,12 +144,12 @@ class HomeViewModel @Inject constructor(
     }
 
     fun hasSelectedFiles(): Boolean {
-        return _uiState.value.files.any { it.isSelected }
+        return _filesState.value.files.any { it.isSelected }
     }
 
     fun selectAllFiles() {
-        _uiState.value = _uiState.value.copy(
-            files = _uiState.value.files.map {
+        _filesState.value = _filesState.value.copy(
+            files = _filesState.value.files.map {
                 it.copy(isSelected = true)
             }
         )
@@ -134,8 +158,8 @@ class HomeViewModel @Inject constructor(
     fun addFilesToFavorites(files: List<FileEntry>) {
         viewModelScope.launch {
             favoritesFilesRepository.addFiles(files)
-            _uiState.value = _uiState.value.copy(
-                files = _uiState.value.files.map {
+            _filesState.value = _filesState.value.copy(
+                files = _filesState.value.files.map {
                     if (files.contains(it)) {
                         it.copy(isFavorite = true)
                     } else {
@@ -149,8 +173,8 @@ class HomeViewModel @Inject constructor(
     fun removeFilesFromFavorites(files: List<FileEntry>) {
         viewModelScope.launch {
             favoritesFilesRepository.deleteFiles(files)
-            _uiState.value = _uiState.value.copy(
-                files = _uiState.value.files.map {
+            _filesState.value = _filesState.value.copy(
+                files = _filesState.value.files.map {
                     if (files.contains(it)) {
                         it.copy(isFavorite = false)
                     } else {
@@ -159,5 +183,9 @@ class HomeViewModel @Inject constructor(
                 }
             )
         }
+    }
+
+    fun searchFiles(searchValue: String) {
+        _searchValue.value = searchValue
     }
 }
