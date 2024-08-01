@@ -48,7 +48,6 @@ fun FileGridItem(
     onAddToFavorite: () -> Unit,
     onRemoveFromFavorite: () -> Unit,
 ) {
-    val density = LocalDensity.current.density
     Column(
         modifier = modifier
             .clip(
