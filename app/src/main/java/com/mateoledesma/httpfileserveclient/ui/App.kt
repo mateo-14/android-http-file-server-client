@@ -68,7 +68,7 @@ fun AppNavHost(
                 )
             )
         } else {
-            val intent: Intent = Intent(Intent.ACTION_VIEW)
+            val intent = Intent(Intent.ACTION_VIEW)
             if (file.url.endsWith(".txt")) {
                 intent.setDataAndType(Uri.parse(file.url), "text/plain")
             } else {

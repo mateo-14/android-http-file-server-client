@@ -8,14 +8,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.mateoledesma.httpfileserveclient.data.model.FileEntry
 import com.mateoledesma.httpfileserveclient.ui.components.FilesOptionsDropdownMenu
 import com.mateoledesma.httpfileserveclient.ui.components.SelectedFilesTopBarIndicator
 import com.mateoledesma.httpfileserveclient.ui.components.SortDropdownMenu
-import com.mateoledesma.httpfileserveclient.viewmodels.FavoritesViewModel
 import com.mateoledesma.httpfileserveclient.ui.screens.home.components.expandAnimating
 
 @SuppressLint("StateFlowValueCalledInComposition")

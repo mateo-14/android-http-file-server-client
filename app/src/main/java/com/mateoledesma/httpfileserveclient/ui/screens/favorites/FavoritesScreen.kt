@@ -18,9 +18,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.mateoledesma.httpfileserveclient.data.model.FileEntry
-import com.mateoledesma.httpfileserveclient.ui.Screen
 import com.mateoledesma.httpfileserveclient.ui.components.FileGrid
 import com.mateoledesma.httpfileserveclient.ui.components.FileList
 import com.mateoledesma.httpfileserveclient.ui.screens.favorites.components.FavoritesTopBar

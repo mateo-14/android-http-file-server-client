@@ -4,9 +4,6 @@ import com.mateoledesma.httpfileserveclient.data.database.dao.FavoriteFileDao
 import com.mateoledesma.httpfileserveclient.data.database.entities.toModel
 import com.mateoledesma.httpfileserveclient.data.model.FileEntry
 import com.mateoledesma.httpfileserveclient.data.model.toEntity
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import java.util.Date
 import javax.inject.Inject
 
 class FavoritesFilesRepository @Inject constructor(
