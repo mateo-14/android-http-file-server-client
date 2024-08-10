@@ -35,6 +35,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.mateoledesma.httpfileserveclient.data.SortBy
 import com.mateoledesma.httpfileserveclient.data.model.FileEntry
 import com.mateoledesma.httpfileserveclient.ui.Screen
 import com.mateoledesma.httpfileserveclient.ui.components.FilesOptionsDropdownMenu
@@ -51,16 +52,20 @@ fun HomeTopBar(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior? = null,
     onClearSelectedFiles: () -> Unit,
-    onChangeLayout: (Boolean) -> Unit,
     onSelectAll: () -> Unit,
     onAddToFavorites: () -> Unit,
     onRemoveFromFavorites: () -> Unit,
     onRandomFile: () -> Unit,
     selectedFiles: List<FileEntry>,
-    isLinearLayout: Boolean,
     path: String,
     onSearchValueChange: (String) -> Unit,
     searchValue: String,
+    isLinearLayout: Boolean,
+    onChangeLayout: (Boolean) -> Unit,
+    isSortAscending: Boolean,
+    onChangeSortAscending: (Boolean) -> Unit,
+    sortBy: SortBy,
+    onChangeSortMode: (SortBy) -> Unit
 ) {
     val hasSelectedFiles = selectedFiles.isNotEmpty()
     val pathList = listOf("Home") + path.split("/").filter { it.isNotBlank() }
@@ -138,7 +143,11 @@ fun HomeTopBar(
                     }
                     SortDropdownMenu(
                         isLinearLayout = isLinearLayout,
-                        onChangeLayout = onChangeLayout
+                        onChangeLayout = onChangeLayout,
+                        isSortAscending = isSortAscending,
+                        onChangeSortAscending = onChangeSortAscending,
+                        sortBy = sortBy,
+                        onChangeSortMode = onChangeSortMode
                     )
                 }
                 FilesOptionsDropdownMenu(

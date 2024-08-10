@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,15 +45,25 @@ fun HomeScreen(
     onClickFile: (FileEntry) -> Unit,
     onRandomFile: (FileEntry) -> Unit,
 ) {
-    val filesState by viewModel.filesState.collectAsState()
     val pullToRefreshState = rememberPullToRefreshState()
-    val isLinearLayout by viewModel.isLinearLayout.collectAsState()
     val coroutineScope = rememberCoroutineScope()
-    val filteredFiles by viewModel.filteredFiles.collectAsState()
-    val selectedFiles = filteredFiles.filter { it.isSelected }
+    val listState = rememberLazyListState()
+    val gridState = rememberLazyGridState()
+
+    val filesState by viewModel.filesState.collectAsState()
+    val filteredAndSortedFiles by viewModel.filteredAndSortedFiles.collectAsState()
+    val isLinearLayout by viewModel.isLinearLayout.collectAsState()
+    val isSortAscending by viewModel.isSortAscending.collectAsState()
+    val sortBy by viewModel.sortBy.collectAsState()
+    val searchValue by viewModel.searchValue.collectAsState()
+
+    val selectedFiles = filteredAndSortedFiles.filter { it.isSelected }
     val scrollBehavior =
         if (filesState.files.isNotEmpty()) TopAppBarDefaults.enterAlwaysScrollBehavior() else TopAppBarDefaults.pinnedScrollBehavior()
 
+    BackHandler(enabled = viewModel.hasSelectedFiles()) {
+        viewModel.clearSelectedFiles()
+    }
 
     LaunchedEffect(key1 = true) {
         val success = viewModel.getFiles(path)
@@ -60,8 +72,9 @@ fun HomeScreen(
         }
     }
 
-    BackHandler(enabled = viewModel.hasSelectedFiles()) {
-        viewModel.clearSelectedFiles()
+    LaunchedEffect(key1 = sortBy, key2 = isSortAscending, key3 = isLinearLayout) {
+        listState.scrollToItem(0)
+        gridState.scrollToItem(0)
     }
 
     fun onSelectFile(file: FileEntry) {
@@ -91,13 +104,9 @@ fun HomeScreen(
             HomeTopBar(
                 navController = navController,
                 scrollBehavior = scrollBehavior,
-                isLinearLayout = isLinearLayout,
                 path = path,
                 selectedFiles = selectedFiles,
                 onClearSelectedFiles = { viewModel.clearSelectedFiles() },
-                onChangeLayout = { isLinearLayout ->
-                    viewModel.saveLayoutPreference(isLinearLayout)
-                },
                 onSelectAll = {
                     viewModel.selectAllFiles()
                 },
@@ -113,8 +122,8 @@ fun HomeScreen(
                 },
                 onRandomFile = {
                     coroutineScope.launch {
-                        if (filteredFiles.isNotEmpty()) {
-                            onRandomFile(filteredFiles.random())
+                        if (filteredAndSortedFiles.isNotEmpty()) {
+                            onRandomFile(filteredAndSortedFiles.random())
                         } else {
                             Toast.makeText(
                                 navController.context,
@@ -127,7 +136,19 @@ fun HomeScreen(
                 onSearchValueChange = { searchValue ->
                     viewModel.searchFiles(searchValue)
                 },
-                searchValue = viewModel.searchValue.collectAsState().value
+                searchValue = searchValue,
+                isLinearLayout = isLinearLayout,
+                onChangeLayout = { isLinearLayout ->
+                    viewModel.saveLayoutPreference(isLinearLayout)
+                },
+                isSortAscending = isSortAscending,
+                onChangeSortAscending = { isSortAscending ->
+                    viewModel.saveSortAscendingPreference(isSortAscending)
+                },
+                sortBy = sortBy,
+                onChangeSortMode = { sortBy ->
+                    viewModel.saveSortByPreference(sortBy)
+                }
             )
         }) { innerPadding ->
         Box(
@@ -146,11 +167,12 @@ fun HomeScreen(
                             .padding(
                                 horizontal = 12.dp
                             ),
-                        files = filteredFiles,
+                        files = filteredAndSortedFiles,
                         onSelect = ::onSelectFile,
                         onAddToFavorite = ::onAddFileToFavorites,
                         onRemoveFromFavorite = ::onRemoveFileFromFavorites,
-                        onClickFile = onClickFile
+                        onClickFile = onClickFile,
+                        state = listState
                     )
                 } else {
                     FileGrid(
@@ -159,11 +181,12 @@ fun HomeScreen(
                             .padding(
                                 horizontal = 12.dp
                             ),
-                        files = filteredFiles,
+                        files = filteredAndSortedFiles,
                         onSelect = ::onSelectFile,
                         onAddToFavorite = ::onAddFileToFavorites,
                         onRemoveFromFavorite = ::onRemoveFileFromFavorites,
-                        onClickFile = onClickFile
+                        onClickFile = onClickFile,
+                        state = gridState
                     )
                 }
             }

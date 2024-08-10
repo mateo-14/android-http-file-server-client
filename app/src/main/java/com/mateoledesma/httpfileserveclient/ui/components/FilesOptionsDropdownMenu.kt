@@ -1,6 +1,7 @@
 package com.mateoledesma.httpfileserveclient.ui.components
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.DropdownMenu
@@ -14,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun FilesOptionsDropdownMenu(
@@ -30,6 +32,7 @@ fun FilesOptionsDropdownMenu(
             Icon(Icons.Rounded.MoreVert, contentDescription = "More Options")
         }
         DropdownMenu(
+            modifier = Modifier.width(180.dp),
             expanded = isOpen,
             onDismissRequest = {
                 isOpen = false

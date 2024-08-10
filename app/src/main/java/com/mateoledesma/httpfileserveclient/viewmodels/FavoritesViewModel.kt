@@ -3,8 +3,10 @@ package com.mateoledesma.httpfileserveclient.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mateoledesma.httpfileserveclient.data.FavoritesFilesRepository
+import com.mateoledesma.httpfileserveclient.data.SortBy
 import com.mateoledesma.httpfileserveclient.data.UserPreferencesRepository
 import com.mateoledesma.httpfileserveclient.data.model.FileEntry
+import com.mateoledesma.httpfileserveclient.utils.sortFiles
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
@@ -12,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
@@ -32,16 +35,32 @@ class FavoritesViewModel @Inject constructor(
         initialValue = true
     )
 
+    val isSortAscending: StateFlow<Boolean> = userPreferencesRepository.isSortAscending.stateIn(
+        viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = true
+    )
+
+    val sortBy: StateFlow<SortBy> = userPreferencesRepository.sortBy.stateIn(
+        viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = SortBy.NAME
+    )
+
     private val _searchValue = MutableStateFlow("")
     val searchValue: StateFlow<String> = _searchValue.asStateFlow()
 
-    @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-    val filteredFiles: StateFlow<List<FileEntry>> = _searchValue.debounce(300).flatMapLatest { searchValue ->
-        _files.map { files ->
-            files.filter { file ->
-                file.name.contains(searchValue, ignoreCase = true)
-            }
+    val filteredAndSortedFiles: StateFlow<List<FileEntry>> = combine(
+        _files,
+        _searchValue,
+        isSortAscending,
+        sortBy
+    ) { files, searchValue, isSortAscending, sortBy ->
+        val filteredFiles = files.filter { file ->
+            file.name.contains(searchValue, ignoreCase = true)
         }
+
+        sortFiles(filteredFiles, isSortAscending, sortBy)
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
@@ -62,6 +81,18 @@ class FavoritesViewModel @Inject constructor(
     fun saveLayoutPreference(isLinearLayout: Boolean) {
         viewModelScope.launch {
             userPreferencesRepository.saveLayoutPreference(isLinearLayout)
+        }
+    }
+
+    fun saveSortAscendingPreference(isSortAscending: Boolean) {
+        viewModelScope.launch {
+            userPreferencesRepository.saveSortAscendingPreference(isSortAscending)
+        }
+    }
+
+    fun saveSortByPreference(sortBy: SortBy) {
+        viewModelScope.launch {
+            userPreferencesRepository.saveSortByPreference(sortBy)
         }
     }
 
@@ -108,5 +139,9 @@ class FavoritesViewModel @Inject constructor(
 
     fun searchFiles(searchValue: String) {
         _searchValue.value = searchValue
+    }
+
+    fun hasSelectedFiles(): Boolean {
+        return _files.value.any { it.isSelected }
     }
 }

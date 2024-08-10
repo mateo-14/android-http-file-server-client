@@ -2,6 +2,7 @@ package com.mateoledesma.httpfileserveclient.ui.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -65,7 +66,7 @@ fun RandomFileDialog(
                     AsyncImage(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(180.dp)
+                            .aspectRatio(16f / 9f)
                             .clip(
                                 MaterialTheme.shapes.small
                             ),

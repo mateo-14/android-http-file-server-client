@@ -6,6 +6,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -71,7 +72,9 @@ fun FileGridItem(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(110.dp),
+                .aspectRatio(
+                    16f / 9f
+                ),
             contentAlignment = Alignment.Center
         ) {
             if (thumbnail.isNullOrEmpty()) {

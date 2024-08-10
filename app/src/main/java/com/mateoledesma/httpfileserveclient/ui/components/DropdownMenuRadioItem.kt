@@ -25,16 +25,11 @@ fun DropdownMenuRadioItem(
     onClick: () -> Unit,
     contentPadding: PaddingValues = MenuDefaults.DropdownMenuItemContentPadding,
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .selectable(selected = selected, onClick = onClick)
-            .sizeIn(
-                minHeight = MIN_RADIO_MENU_ITEM_HEIGHT,
-            )
-            .padding(contentPadding),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+    SelectableDropdownMenuItem(
+        modifier = modifier,
+        selected = selected,
+        onClick = onClick,
+        contentPadding = contentPadding
     ) {
         text()
         RadioButton(selected = selected, onClick = null)

@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
+import com.mateoledesma.httpfileserveclient.data.SortBy
 import com.mateoledesma.httpfileserveclient.data.model.FileEntry
 import com.mateoledesma.httpfileserveclient.ui.components.FilesOptionsDropdownMenu
 import com.mateoledesma.httpfileserveclient.ui.components.SearchTopBar
@@ -36,15 +37,19 @@ import com.mateoledesma.httpfileserveclient.ui.screens.home.components.expandAni
 @Composable
 fun FavoritesTopBar(
     scrollBehavior: TopAppBarScrollBehavior? = null,
-    isLinearLayout: Boolean,
     selectedFiles: List<FileEntry>,
     onClearSelectedFiles: () -> Unit,
-    onChangeLayout: (Boolean) -> Unit,
     onSelectAll: () -> Unit,
     onRemoveFromFavorites: () -> Unit,
     onRandomFile: () -> Unit,
     onSearchValueChange: (String) -> Unit,
     searchValue: String,
+    isLinearLayout: Boolean,
+    onChangeLayout: (Boolean) -> Unit,
+    isSortAscending: Boolean,
+    onChangeSortAscending: (Boolean) -> Unit,
+    sortBy: SortBy,
+    onChangeSortMode: (SortBy) -> Unit
 ) {
     val hasSelectedFiles = selectedFiles.isNotEmpty()
     var isSearching by remember { mutableStateOf(false) }
@@ -108,7 +113,11 @@ fun FavoritesTopBar(
                     }
                     SortDropdownMenu(
                         isLinearLayout = isLinearLayout,
-                        onChangeLayout = onChangeLayout
+                        onChangeLayout = onChangeLayout,
+                        isSortAscending = isSortAscending,
+                        onChangeSortAscending = onChangeSortAscending,
+                        sortBy = sortBy,
+                        onChangeSortMode = onChangeSortMode
                     )
                 }
 

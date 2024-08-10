@@ -1,0 +1,34 @@
+package com.mateoledesma.httpfileserveclient.ui.components
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.MenuDefaults
+import androidx.compose.material3.RadioButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+
+@Composable
+fun DropdownMenuCheckboxItem(
+    modifier: Modifier = Modifier,
+    checked: Boolean,
+    text: @Composable () -> Unit,
+    onClick: () -> Unit,
+    contentPadding: PaddingValues = MenuDefaults.DropdownMenuItemContentPadding,
+) {
+    SelectableDropdownMenuItem(
+        modifier = modifier,
+        selected = checked,
+        onClick = onClick,
+        contentPadding = contentPadding
+    ) {
+        text()
+        Checkbox(checked = checked, onCheckedChange = null)
+    }
+}

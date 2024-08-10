@@ -1,15 +1,19 @@
 package com.mateoledesma.httpfileserveclient.ui.screens.favorites
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -28,16 +32,32 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FavoritesScreen(
+    viewModel: FavoritesViewModel = hiltViewModel<FavoritesViewModel>(),
     navController: NavController,
     onClickFile: (FileEntry) -> Unit,
     onRandomFile: (FileEntry) -> Unit,
 ) {
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    val viewModel = hiltViewModel<FavoritesViewModel>()
-    val isLinearLayout by viewModel.isLinearLayout.collectAsState()
     val coroutineScope = rememberCoroutineScope()
-    val filteredFiles by viewModel.filteredFiles.collectAsState()
-    val selectedFiles = filteredFiles.filter { it.isSelected }
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val listState = rememberLazyListState()
+    val gridState = rememberLazyGridState()
+
+    val filteredAndSortedFiles by viewModel.filteredAndSortedFiles.collectAsState()
+    val isLinearLayout by viewModel.isLinearLayout.collectAsState()
+    val isSortAscending by viewModel.isSortAscending.collectAsState()
+    val sortBy by viewModel.sortBy.collectAsState()
+
+    val selectedFiles = filteredAndSortedFiles.filter { it.isSelected }
+
+
+    BackHandler(enabled = viewModel.hasSelectedFiles()) {
+        viewModel.clearSelectedFiles()
+    }
+
+    LaunchedEffect(key1 = sortBy, key2 = isSortAscending, key3 = isLinearLayout) {
+        listState.scrollToItem(0)
+        gridState.scrollToItem(0)
+    }
 
     fun handleSelect(file: FileEntry) {
         if (file.isSelected) {
@@ -59,10 +79,6 @@ fun FavoritesScreen(
         topBar = {
             FavoritesTopBar(
                 scrollBehavior = scrollBehavior,
-                isLinearLayout = isLinearLayout,
-                onChangeLayout = { isLinearLayout ->
-                    viewModel.saveLayoutPreference(isLinearLayout)
-                },
                 selectedFiles = selectedFiles,
                 onClearSelectedFiles = {
                     viewModel.clearSelectedFiles()
@@ -75,8 +91,8 @@ fun FavoritesScreen(
                 },
                 onRandomFile = {
                     coroutineScope.launch {
-                        if (filteredFiles.isNotEmpty()) {
-                            onRandomFile(filteredFiles.random())
+                        if (filteredAndSortedFiles.isNotEmpty()) {
+                            onRandomFile(filteredAndSortedFiles.random())
                         } else {
                             Toast.makeText(
                                 navController.context,
@@ -89,7 +105,19 @@ fun FavoritesScreen(
                 onSearchValueChange = { searchValue ->
                     viewModel.searchFiles(searchValue)
                 },
-                searchValue = viewModel.searchValue.collectAsState().value,
+                searchValue =  viewModel.searchValue.collectAsState().value,
+                isLinearLayout = isLinearLayout,
+                onChangeLayout = { isLinearLayout ->
+                    viewModel.saveLayoutPreference(isLinearLayout)
+                },
+                isSortAscending =  isSortAscending,
+                onChangeSortAscending = { isSortAscending ->
+                    viewModel.saveSortAscendingPreference(isSortAscending)
+                },
+                sortBy = sortBy,
+                onChangeSortMode = { sortBy ->
+                    viewModel.saveSortByPreference(sortBy)
+                }
             )
         }) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
@@ -100,7 +128,7 @@ fun FavoritesScreen(
                         .padding(
                             horizontal = 12.dp
                         ),
-                    files = filteredFiles,
+                    files = filteredAndSortedFiles,
                     onSelect = { file ->
                         handleSelect(file)
                     },
@@ -111,6 +139,7 @@ fun FavoritesScreen(
                     onClickFile = { file ->
                         onClickFile(file)
                     },
+                    state = listState
                 )
             } else {
                 FileGrid(
@@ -119,7 +148,7 @@ fun FavoritesScreen(
                         .padding(
                             horizontal = 12.dp
                         ),
-                    files = filteredFiles,
+                    files = filteredAndSortedFiles,
                     onSelect = { file ->
                         handleSelect(file)
                     },
@@ -130,6 +159,7 @@ fun FavoritesScreen(
                     onClickFile = { file ->
                         onClickFile(file)
                     },
+                    state = gridState
                 )
             }
         }

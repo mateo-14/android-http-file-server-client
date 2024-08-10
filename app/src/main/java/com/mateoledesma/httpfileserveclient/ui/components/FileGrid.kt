@@ -2,8 +2,10 @@ package com.mateoledesma.httpfileserveclient.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -18,12 +20,14 @@ fun FileGrid(
     onAddToFavorite: (FileEntry) -> Unit,
     onRemoveFromFavorite: (FileEntry) -> Unit,
     onClickFile: (FileEntry) -> Unit,
+    state: LazyGridState = rememberLazyGridState()
 ) {
     LazyVerticalGrid(
         modifier = modifier,
         columns = GridCells.Adaptive(minSize = 140.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        state = state
     ) {
         items(
             items = files,
